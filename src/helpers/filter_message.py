@@ -9,9 +9,9 @@ def filter_messages(messages: list[Message]) -> list[UserMessage]:
     for message in messages:
         if message.role == Role.SYSTEM:
             continue
-        elif message.role == Role.USER or message.role == Role.GUARDRAILS:
+        elif message.role == Role.USER:
             final_messages.append(UserMessage(role=message.role, content=message.user_message))
-        elif message.role == Role.ASSISTANT:
+        elif message.role == Role.GUARDRAILS:
             final_messages.append(UserMessage(role=Role.USER, content=message.user_message))
             final_messages.append(UserMessage(role=Role.ASSISTANT, content=message.content))
         else:

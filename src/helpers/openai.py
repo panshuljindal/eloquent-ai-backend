@@ -4,7 +4,7 @@ from functools import lru_cache
 from openai import OpenAI
 
 from src.sql_models.message import Message
-
+from src.constants.role import Role
 
 class OpenAIHelper:
     def __init__(self) -> None:
@@ -15,9 +15,10 @@ class OpenAIHelper:
 
         Returns the textual output produced by the model.
         """
+
         response = self.client.responses.parse(
             model=model,
-            input=[{"role": message.role, "content": message.content} for message in messages],
+            input=[{"role": message.role if message.role != Role.GUARDRAILS else Role.USER, "content": message.content} for message in messages],
         )
         return response.output_text
 
