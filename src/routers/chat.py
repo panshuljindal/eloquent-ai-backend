@@ -20,6 +20,8 @@ from src.helpers.openai import OpenAIHelper, get_openai_helper
 from src.helpers.pinecone import PineconeHelper, get_pinecone_helper
 from src.helpers.response import api_response
 from src.models.chat import ChatRequest
+from src.helpers.guardrails import GuardrailsHelper, get_guardrails_helper
+from src.helpers.guardrails import GuardrailsHelper, get_guardrails_helper
 
 router = APIRouter(prefix="/chat")
 
@@ -28,8 +30,13 @@ def chat(
     request: ChatRequest,
     openai_helper: OpenAIHelper = Depends(get_openai_helper),
     pinecone_helper: PineconeHelper = Depends(get_pinecone_helper),
+    guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
     session: Session = Depends(get_db_session),
 ):
+    is_safe_prompt, sanitized_user_text = guardrails.sanitize_user_text(request.message)
+    if not is_safe_prompt:
+        return api_response({"message": "Input rejected by safety checks", "reason": sanitized_user_text}, 400)
+
     conversation = get_conversation_by_id(request.conversation_id, session)
     messages = []
     if conversation is None:
@@ -42,7 +49,9 @@ def chat(
     messages.append(user_message)
 
     response_text = openai_helper.generate_response(messages)
-    create_message(conversation.id, Role.ASSISTANT, response_text, None, session)
+    validated = guardrails.validate_output(response_text)
+
+    create_message(conversation.id, Role.ASSISTANT, validated.answer, None, session)
     
     history = get_conversation_messages(conversation.id, session)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation.id})
