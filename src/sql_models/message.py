@@ -6,6 +6,7 @@ class Message(SQLModel, table=True):
     conversation_id: int = Field(index=True)
     role: str = Field(index=True)
     content: str = Field(index=True)
+    user_message: str | None = Field(index=True, nullable=True)
     created_at: datetime = Field(default_factory=datetime.now(UTC))
 
     

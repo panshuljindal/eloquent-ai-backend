@@ -17,7 +17,7 @@ def get_conversation_messages(conversation_id: int, session: Session) -> list[Me
     query = select(Message).where(Message.conversation_id == conversation_id)
     return list(session.exec(query))
 
-def create_conversation(user_id: int | None, session: Session) -> Conversation:
+def create_conversation(user_id: int | None, short_name: str | None, description: str | None, session: Session) -> Conversation:
     """Create a new conversation"""
     conversation = Conversation(user_id=user_id, created_at=datetime.now(UTC))
     session.add(conversation)
@@ -25,9 +25,9 @@ def create_conversation(user_id: int | None, session: Session) -> Conversation:
     session.refresh(conversation)
     return conversation
 
-def create_message(conversation_id: int, role: str, content: str, session: Session) -> Message:
+def create_message(conversation_id: int, role: str, content: str, user_message: str | None, session: Session) -> Message:
     """Create a new message"""
-    message = Message(conversation_id=conversation_id, role=role, content=content, created_at=datetime.now(UTC))
+    message = Message(conversation_id=conversation_id, role=role, content=content, user_message=user_message, created_at=datetime.now(UTC))
     session.add(message)
     session.commit()
     session.refresh(message)
