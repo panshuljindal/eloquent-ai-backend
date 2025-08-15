@@ -36,17 +36,15 @@ class GuardrailsHelper:
     ]
 
     def __init__(self) -> None:
-        # Guard is optional; we rely primarily on local heuristics to avoid API drift.
         self._guard = Guard if isinstance(Guard, type) else None
 
     def validate_text(self, text: str) -> Tuple[bool, str]:
-        # Heuristic checks: prompt injection style + obvious secrets
         if self._looks_like_injection(text):
-            return False, "possible prompt injection detected"
+            return False, "Possible prompt injection detected"
         for regex in self._SECRET_RES:
             if regex.search(text):
-                return False, "possible secret detected"
-        return True, "ok"
+                return False, "Possible secret detected"
+        return True, "OK"
 
     def sanitize_user_text(self, text: str) -> Tuple[bool, str]:
         ok, reason = self.validate_text(text)
@@ -56,7 +54,6 @@ class GuardrailsHelper:
         return True, redacted
 
     def sanitize_context(self, text: str) -> Tuple[bool, str]:
-        # Drop if injection-like content is detected
         if self._looks_like_injection(text):
             return False, ""
         cleaned = self._strip_active_content(text)
