@@ -12,11 +12,6 @@ class OpenAIHelper:
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
     def generate_response(self, messages: list[Message], model: str = "gpt-4o", response_format: Type[BaseModel] = OpenAIMessage) -> BaseModel:
-        print("-" * 100)
-        for message in messages:
-            print("Role: ", message.role)
-            print("Content: ", message.content)
-            print("-" * 100)
         response = self.client.responses.parse(
             model=model,
             input=[{"role": message.role, "content": message.content} for message in messages],

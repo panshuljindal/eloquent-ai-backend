@@ -17,12 +17,16 @@ class PineconeHelper:
         self._client = Pinecone(api_key=api_key)
         self._index = self._client.Index(host=host)
 
-    def query(self, query_text: str, top_k: int = 10) -> Dict[str, Any]:
+    def query(self, query_text: str, top_k: int = 10) -> str:
         query_payload = {
             "inputs": {"text": query_text},
             "top_k": top_k,
         }
-        return self._index.search(query=query_payload, namespace=self._namespace)
+        result =self._index.search(query=query_payload, namespace=self._namespace)
+        docs = ""
+        for hit in result['result']['hits']:
+            docs += f"Source: {hit['_id']}\nCategory: {hit['fields']['category']}\nText: {hit['fields']['text']}\n\n"
+        return docs
 
 
 @lru_cache

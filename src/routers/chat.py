@@ -7,7 +7,7 @@ from src.helpers.database import get_db_session
 from sqlmodel import Session
 from src.helpers.response import api_response
 from src.constants.role import Role
-from src.constants.prompts import SYSTEM_PROMPT
+from src.constants.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 
 router = APIRouter(prefix="/chat")
 
@@ -25,12 +25,12 @@ def chat(
         messages = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, session)]
     else:
         messages = get_conversation_messages(conversation.id, session)
-    user_message = create_message(conversation.id, Role.USER, request.message, session)
+    docs = pinecone_helper.query(request.message, top_k=10)
+    user_message = create_message(conversation.id, Role.USER, HUMAN_PROMPT.format(USER_QUERY=request.message, CONTEXT_SNIPPETS=docs), session)
     messages.append(user_message)
 
     response = openai_helper.generate_response(messages)
     create_message(conversation.id, Role.ASSISTANT, response.content, session)
-
     history = get_conversation_messages(conversation.id, session)
     return api_response({"messages": history, "conversation_id": conversation.id})
 
