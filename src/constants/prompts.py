@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 SYSTEM_PROMPT = """
 # System Prompt — Fintech Support Assistant
 
