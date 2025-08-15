@@ -9,6 +9,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "fastapi>=0.116.1",
     "gunicorn>=23.0.0",
+    "email-validator>=2.1.0.post1",
     "json-repair>=0.49.0",
     "openai>=1.99.9",
     "pinecone>=7.3.0",
