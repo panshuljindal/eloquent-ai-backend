@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends
-from src.controllers.auth import add_user, delete_user, get_user_by_id, get_user_by_email
-from src.helpers.database import get_db_session
-from sqlmodel import Session
-from src.helpers.response import api_response
-from src.sql_models.user import User
-from src.models.auth import LoginRequest
+from __future__ import annotations
+
 import bcrypt
+from fastapi import APIRouter
+from sqlmodel import Session
+
+from src.controllers.auth import add_user, get_user_by_email
+from src.helpers.response import api_response
+from src.models.auth import LoginRequest
+from src.sql_models.user import User
 
 router = APIRouter(prefix="/auth")
 
@@ -27,7 +29,7 @@ def login_route(payload: LoginRequest):
     db_user = get_user_by_email(payload.email)
     if db_user is None:
         return api_response({"message": "User not found"}, 404)
-    if not bcrypt.checkpw(payload.password.encode('utf-8'), db_user.password.encode('utf-8')):
+    if not bcrypt.checkpw(payload.password.encode("utf-8"), db_user.password.encode("utf-8")):
         return api_response({"message": "Invalid password"}, 401)
     try:
         sanitized = db_user.model_dump(exclude={"password"})
