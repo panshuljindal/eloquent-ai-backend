@@ -32,3 +32,9 @@ def create_message(conversation_id: int, role: str, content: str, user_message: 
     session.commit()
     session.refresh(message)
     return message
+
+
+def get_conversations_by_user_id(user_id: int, session: Session) -> list[Conversation]:
+    """Get a conversation by its user id"""
+    query = select(Conversation).where(Conversation.user_id == user_id)
+    return session.exec(query).all()

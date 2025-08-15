@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from src.helpers.openai import OpenAIHelper, get_openai_helper
 from src.helpers.pinecone import PineconeHelper, get_pinecone_helper
-from src.controllers.conversation_controller import create_conversation, get_conversation_by_id, get_conversation_messages, create_message
+from src.controllers.conversation import create_conversation, get_conversation_by_id, get_conversation_messages, create_message, get_conversations_by_user_id
+from src.controllers.auth import get_user_by_id
 from src.models.chat import ChatRequest
 from src.helpers.database import get_db_session
 from sqlmodel import Session
@@ -22,7 +23,7 @@ def chat(
     conversation = get_conversation_by_id(request.conversation_id, session)
     messages = []
     if conversation is None:
-        conversation = create_conversation(None, None, None, session)
+        conversation = create_conversation(request.user_id, None, None, session)
         messages = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, None, session)]
     else:
         messages = get_conversation_messages(conversation.id, session)
@@ -31,7 +32,7 @@ def chat(
     messages.append(user_message)
 
     response = openai_helper.generate_response(messages)
-    create_message(conversation.id, Role.ASSISTANT, response.content, None, session)
+    create_message(conversation.id, Role.ASSISTANT, response, None, session)
     
     history = get_conversation_messages(conversation.id, session)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation.id})
@@ -47,4 +48,19 @@ def get_conversation_messages_by_id(
         return api_response({"message": "Conversation not found"}, 404)
     
     history = get_conversation_messages(conversation_id, session)
+    print(history)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation_id})
+
+@router.get("/conversations")
+def get_user_conversations(
+    user_id: int | None = None,
+    session: Session = Depends(get_db_session),
+):
+    """Get conversations for a user by query param"""
+    if user_id is None:
+        return api_response({"message": "User id is required"}, 400)
+    user = get_user_by_id(user_id)
+    if user is None:
+        return api_response({"message": "User not found"}, 404)
+    conversations = get_conversations_by_user_id(user_id, session)
+    return api_response({"conversations": conversations})
