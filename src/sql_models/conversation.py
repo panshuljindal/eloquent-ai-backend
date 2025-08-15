@@ -10,3 +10,4 @@ class Conversation(SQLModel, table=True):
     short_name: str | None = Field(index=True, nullable=True)
     description: str | None = Field(index=True, nullable=True)
     created_at: datetime = Field()
+    is_deleted: bool = Field(default=False)

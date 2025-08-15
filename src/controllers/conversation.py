@@ -53,3 +53,9 @@ def get_conversations_by_user_id(user_id: int, session: Session) -> list[Convers
     """Get a conversation by its user id"""
     query = select(Conversation).where(Conversation.user_id == user_id)
     return session.exec(query).all()
+
+def update_conversation(conversation: Conversation, session: Session) -> None:
+    """Update a conversation"""
+    session.add(conversation)
+    session.commit()
+    session.refresh(conversation)

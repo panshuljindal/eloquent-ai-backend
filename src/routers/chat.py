@@ -12,6 +12,7 @@ from src.controllers.conversation import (
     get_conversation_by_id,
     get_conversation_messages,
     get_conversations_by_user_id,
+    update_conversation,
 )
 from src.helpers.database import get_db_session
 from src.helpers.filter_message import filter_messages
@@ -46,6 +47,20 @@ def chat(
     history = get_conversation_messages(conversation.id, session)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation.id})
 
+@router.post("/delete/{conversation_id}")
+def delete_conversation(
+    conversation_id: int,
+    session: Session = Depends(get_db_session),
+):
+    """Delete a conversation"""
+    conversation = get_conversation_by_id(conversation_id, session)
+    if conversation is None:
+        return api_response({"message": "Conversation not found"}, 404)
+
+    conversation.is_deleted = True
+    update_conversation(conversation, session)
+    return api_response({"message": "Conversation deleted"})
+
 @router.get("/messages/{conversation_id}")
 def get_conversation_messages_by_id(
     conversation_id: int,
@@ -57,7 +72,6 @@ def get_conversation_messages_by_id(
         return api_response({"message": "Conversation not found"}, 404)
     
     history = get_conversation_messages(conversation_id, session)
-    print(history)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation_id})
 
 @router.get("/conversations")
