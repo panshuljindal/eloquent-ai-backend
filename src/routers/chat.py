@@ -21,7 +21,6 @@ from src.helpers.pinecone import PineconeHelper, get_pinecone_helper
 from src.helpers.response import api_response
 from src.models.chat import ChatRequest
 from src.helpers.guardrails import GuardrailsHelper, get_guardrails_helper
-from src.helpers.guardrails import GuardrailsHelper, get_guardrails_helper
 
 router = APIRouter(prefix="/chat")
 
@@ -33,10 +32,6 @@ def chat(
     guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
     session: Session = Depends(get_db_session),
 ):
-    is_safe_prompt, sanitized_user_text = guardrails.sanitize_user_text(request.message)
-    if not is_safe_prompt:
-        return api_response({"message": "Input rejected by safety checks", "reason": sanitized_user_text}, 400)
-
     conversation = get_conversation_by_id(request.conversation_id, session)
     messages = []
     if conversation is None:
@@ -44,8 +39,18 @@ def chat(
         messages = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, None, session)]
     else:
         messages = get_conversation_messages(conversation.id, session)
-    docs = pinecone_helper.query(request.message, top_k=10)
-    user_message = create_message(conversation.id, Role.USER, HUMAN_PROMPT.format(USER_QUERY=request.message, CONTEXT_SNIPPETS=docs), request.message, session)
+        
+    if conversation.is_deleted:
+        return api_response({"message": "Conversation is deleted"}, 400)
+    
+    is_safe_prompt, sanitized_user_text = guardrails.sanitize_user_text(request.message)
+    if not is_safe_prompt:
+        user_message = create_message(conversation.id, Role.ASSISTANT, sanitized_user_text, request.message, session)
+        messages.append(user_message)
+        return api_response({"messages": filter_messages(messages), "conversation_id": conversation.id})
+
+    docs = pinecone_helper.query(sanitized_user_text, top_k=10)
+    user_message = create_message(conversation.id, Role.USER, HUMAN_PROMPT.format(USER_QUERY=sanitized_user_text, CONTEXT_SNIPPETS=docs), sanitized_user_text, session)
     messages.append(user_message)
 
     response_text = openai_helper.generate_response(messages)
