@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import dotenv
+from src.routers.chat import router as chat_router
 
 app = FastAPI(
-    title="Dev Ops Agent",
-    description="A FastAPI application for dev ops",
+    title="Eloquent AI Agent",
+    description="A Chat application for Eloquent AI",
     version="1.0.0"
 )
 
@@ -18,6 +19,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(chat_router, prefix="/api")
 
 @app.get("/health")
 def health_check():
