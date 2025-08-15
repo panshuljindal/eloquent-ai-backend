@@ -45,7 +45,7 @@ def chat(
     
     is_safe_prompt, sanitized_user_text = guardrails.sanitize_user_text(request.message)
     if not is_safe_prompt:
-        user_message = create_message(conversation.id, Role.ASSISTANT, sanitized_user_text, request.message, session)
+        user_message = create_message(conversation.id, Role.GUARDRAILS, sanitized_user_text, request.message, session)
         messages.append(user_message)
         return api_response({"messages": filter_messages(messages), "conversation_id": conversation.id})
 
