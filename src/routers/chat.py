@@ -211,13 +211,13 @@ async def chat_websocket(
 def delete_conversation(
     conversation_id: int,
     session: Session = Depends(get_db_session_dep),
-    current_user = Depends(get_current_user),
+    current_user = Depends(get_current_user_optional),
 ):
     """Delete a conversation"""
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:
         return api_response({"message": "Conversation not found"}, 404)
-    if conversation.user_id != current_user.id:
+    if current_user is not None and conversation.user_id != current_user.id:
         return api_response({"message": "Forbidden"}, 403)
     if conversation.is_deleted:
         return api_response({"message": "Conversation already deleted"}, 400)
