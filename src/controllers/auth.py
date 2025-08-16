@@ -51,9 +51,27 @@ def create_user_token(user: User) -> str:
     return create_access_token({"user_id": str(user.id), "email": user.email})
 
 def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)) -> User:
+    """Get the current user from the token, if the token is not provided, raise an error"""
     if credentials is None or not credentials.scheme.lower() == "bearer":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     payload = decode_token(credentials.credentials)
+    if payload is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    user_id_str = payload.get("user_id")
+    if not user_id_str:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    user = get_user_by_id(int(user_id_str))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
+
+def get_current_user_optional(credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)) -> User | None:
+    """Get the current user from the token, if the token is not provided, return None"""
+    if credentials is None or not credentials.scheme or credentials.credentials is None:
+        return None
+    payload = decode_token(credentials.credentials)
+    if payload is None:
+        return None
     user_id_str = payload.get("user_id")
     if not user_id_str:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")

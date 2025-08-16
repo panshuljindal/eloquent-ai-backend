@@ -6,7 +6,7 @@ from datetime import datetime, UTC
 
 from src.constants.prompts import HUMAN_PROMPT, SYSTEM_PROMPT, SUMMARY_PROMPT
 from src.constants.role import Role
-from src.controllers.auth import get_current_user
+from src.controllers.auth import get_current_user, get_current_user_optional
 from src.controllers.conversation import (
     create_conversation,
     create_message,
@@ -33,12 +33,17 @@ def chat(
     pinecone_helper: PineconeHelper = Depends(get_pinecone_helper),
     guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
     session: Session = Depends(get_db_session_dep),
+    current_user = Depends(get_current_user_optional),
 ):
     conversation = get_conversation_by_id(request.conversation_id, session)
     if conversation is None:
-        conversation = create_conversation(request.user_id, session)
+        user_id = current_user.id if current_user is not None else None
+        conversation = create_conversation(user_id, session)
         messages: list[Message] = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, None, session)]
     else:
+        if conversation.user_id is not None:
+            if current_user is None or conversation.user_id != current_user.id:
+                return api_response({"message": "Forbidden"}, 403)
         messages: list[Message] = get_conversation_messages(conversation.id, session)
         
     if conversation.is_deleted:
@@ -85,13 +90,13 @@ def delete_conversation(
 def get_conversation_messages_by_id(
     conversation_id: int,
     session: Session = Depends(get_db_session_dep),
-    current_user = Depends(get_current_user),
+    current_user = Depends(get_current_user_optional),
 ):
     """Get the chat history for a session"""
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:
         return api_response({"message": "Conversation not found"}, 404)
-    if conversation.user_id != current_user.id:
+    if current_user is not None and conversation.user_id != current_user.id:
         return api_response({"message": "Forbidden"}, 403)
     if conversation.is_deleted:
         return api_response({"message": "Conversation already deleted"}, 400)
@@ -115,12 +120,12 @@ def summarize_conversation(
     openai_helper: OpenAIHelper = Depends(get_openai_helper),
     guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
     session: Session = Depends(get_db_session_dep),
-    current_user = Depends(get_current_user),
+    current_user = Depends(get_current_user_optional),
 ):
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:
         return api_response({"message": "Conversation not found"}, 404)
-    if conversation.user_id != current_user.id:
+    if current_user is not None and conversation.user_id != current_user.id:
         return api_response({"message": "Forbidden"}, 403)
 
     history = get_conversation_messages(conversation_id, session)
