@@ -49,9 +49,9 @@ def create_message(
     return message
 
 
-def get_conversations_by_user_id(user_id: int, session: Session) -> list[Conversation]:
+def get_conversations_by_user_id(user_id: int, session: Session, *, is_deleted: bool = False) -> list[Conversation]:
     """Get a conversation by its user id"""
-    query = select(Conversation).where(Conversation.user_id == user_id)
+    query = select(Conversation).where(Conversation.user_id == user_id, Conversation.is_deleted == is_deleted)
     return session.exec(query).all()
 
 def update_conversation(conversation: Conversation, session: Session) -> None:

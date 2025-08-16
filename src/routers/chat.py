@@ -72,7 +72,9 @@ def delete_conversation(
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:
         return api_response({"message": "Conversation not found"}, 404)
-
+    if conversation.is_deleted:
+        return api_response({"message": "Conversation already deleted"}, 400)
+    
     conversation.is_deleted = True
     update_conversation(conversation, session)
     return api_response({"message": "Conversation deleted"})
@@ -86,7 +88,9 @@ def get_conversation_messages_by_id(
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:
         return api_response({"message": "Conversation not found"}, 404)
-    
+    if conversation.is_deleted:
+        return api_response({"message": "Conversation already deleted"}, 400)
+
     history = get_conversation_messages(conversation_id, session)
     return api_response({"messages": filter_messages(history), "conversation_id": conversation_id})
 
@@ -101,7 +105,7 @@ def get_user_conversations(
     user = get_user_by_id(user_id)
     if user is None:
         return api_response({"message": "User not found"}, 404)
-    conversations = get_conversations_by_user_id(user_id, session)
+    conversations = get_conversations_by_user_id(user_id, session, is_deleted=False)
     return api_response({"conversations": conversations})
 
 
