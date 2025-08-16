@@ -4,9 +4,14 @@ from datetime import UTC, datetime
 
 import bcrypt
 from sqlmodel import select
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.helpers.database import get_db_session
 from src.sql_models.user import User
+from src.helpers.jwt import create_access_token, decode_token
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 def add_user(email: str, name: str, password: str) -> User:
     with get_db_session() as session:
@@ -41,3 +46,18 @@ def get_user_by_email(email: str | None) -> User | None:
         return None
     with get_db_session() as session:
         return session.exec(select(User).where(User.email == email)).first()
+
+def create_user_token(user: User) -> str:
+    return create_access_token({"user_id": str(user.id), "email": user.email})
+
+def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)) -> User:
+    if credentials is None or not credentials.scheme.lower() == "bearer":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    payload = decode_token(credentials.credentials)
+    user_id_str = payload.get("user_id")
+    if not user_id_str:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    user = get_user_by_id(int(user_id_str))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user

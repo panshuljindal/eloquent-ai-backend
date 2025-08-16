@@ -17,4 +17,5 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "uvicorn>=0.35.0",
     "guardrails-ai>=0.5.0",
+    "PyJWT>=2.9.0",
 ]
