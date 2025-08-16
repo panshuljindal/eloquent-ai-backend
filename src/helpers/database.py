@@ -15,7 +15,7 @@ def get_db_engine():
     In dev, ensure tables exist on first access. Adds sane pool defaults
     and enables pre-ping to avoid stale connections.
     """
-    pool_size = int(os.getenv("DB_POOL_SIZE", "10"))
+    pool_size = int(os.getenv("DB_POOL_SIZE", "30"))
     max_overflow = int(os.getenv("DB_MAX_OVERFLOW", "20"))
     pool_timeout = int(os.getenv("DB_POOL_TIMEOUT", "30"))
     pool_recycle = int(os.getenv("DB_POOL_RECYCLE", "1800"))
