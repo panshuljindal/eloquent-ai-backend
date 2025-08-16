@@ -44,3 +44,9 @@ Context snippets:
 
 Answer:
 """
+
+SUMMARY_PROMPT = (
+    "Summarize the conversation below succinctly (<= 120 words). "
+    "Include key points and any next steps. If there is no context, reply 'No conversation to summarize.'\n\n"
+    "Conversation:\n{CONTEXT}"
+)

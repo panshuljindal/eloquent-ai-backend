@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
+from datetime import datetime, UTC
 
-from src.constants.prompts import HUMAN_PROMPT, SYSTEM_PROMPT
+from src.constants.prompts import HUMAN_PROMPT, SYSTEM_PROMPT, SUMMARY_PROMPT
 from src.constants.role import Role
 from src.controllers.auth import get_user_by_id
 from src.controllers.conversation import (
@@ -18,9 +19,10 @@ from src.helpers.database import get_db_session
 from src.helpers.filter_message import filter_messages
 from src.helpers.openai import OpenAIHelper, get_openai_helper
 from src.helpers.pinecone import PineconeHelper, get_pinecone_helper
-from src.helpers.response import api_response
+from src.helpers.response import api_response       
 from src.models.chat import ChatRequest
 from src.helpers.guardrails import GuardrailsHelper, get_guardrails_helper
+from src.sql_models.message import Message
 
 router = APIRouter(prefix="/chat")
 
@@ -101,3 +103,27 @@ def get_user_conversations(
         return api_response({"message": "User not found"}, 404)
     conversations = get_conversations_by_user_id(user_id, session)
     return api_response({"conversations": conversations})
+
+
+@router.post("/summarize/{conversation_id}")
+def summarize_conversation(
+    conversation_id: int,
+    openai_helper: OpenAIHelper = Depends(get_openai_helper),
+    guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
+    session: Session = Depends(get_db_session),
+):
+    conversation = get_conversation_by_id(conversation_id, session)
+    if conversation is None:
+        return api_response({"message": "Conversation not found"}, 404)
+
+    history = get_conversation_messages(conversation_id, session)
+    context_text = "\n\n".join(
+        f"{message.role}: {message.user_message if message.role == Role.USER else message.content}" for message in history if message.role != Role.SYSTEM
+    )
+    
+    messages = [Message(conversation_id=conversation_id, role=Role.SYSTEM, content=SUMMARY_PROMPT.format(CONTEXT=context_text), user_message=None, created_at=datetime.now(UTC))]
+
+    raw_summary = openai_helper.generate_response(messages)
+    validated = guardrails.validate_output(raw_summary)
+
+    return api_response({"summary": validated.answer})
