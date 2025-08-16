@@ -10,3 +10,4 @@ class User(SQLModel, table=True):
     name: str = Field(index=True)
     password: str = Field(index=True)
     created_at: datetime = Field(default=None)
+    token: str | None = Field(default=None)
