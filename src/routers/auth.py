@@ -6,17 +6,17 @@ from sqlmodel import Session
 
 from src.controllers.auth import add_user, get_user_by_email
 from src.helpers.response import api_response
-from src.models.auth import LoginRequest
+from src.models.auth import LoginRequest, RegisterRequest
 from src.sql_models.user import User
 
 router = APIRouter(prefix="/auth")
 
 @router.post("/signup")
-def signup_route(user: User):
+def signup_route(payload: RegisterRequest):
     """Create a new user"""
-    if get_user_by_email(user.email) is not None:
+    if get_user_by_email(payload.email) is not None:
         return api_response({"message": "User already exists"}, 400)
-    db_user = add_user(user.email, user.name, user.password)
+    db_user = add_user(payload.email, payload.name, payload.password)
     try:
         sanitized = db_user.model_dump(exclude={"password"})
     except Exception:

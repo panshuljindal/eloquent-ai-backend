@@ -37,7 +37,6 @@ class PineconeHelper:
             )
         return docs
 
-
 @lru_cache
 def get_pinecone_helper() -> PineconeHelper:
     return PineconeHelper()

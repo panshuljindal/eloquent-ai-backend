@@ -2,11 +2,10 @@ from __future__ import annotations
 import functools
 import html
 import re
-from typing import Tuple
-try:
-    from guardrails import Guard  # type: ignore
-except Exception:  # pragma: no cover - optional at runtime
-    Guard = None  # type: ignore[assignment]
+from typing import Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from guardrails import Guard
 from pydantic import BaseModel
 
 
@@ -36,7 +35,7 @@ class GuardrailsHelper:
     ]
 
     def __init__(self) -> None:
-        self._guard = Guard if isinstance(Guard, type) else None
+        self._guard = Guard
 
     def validate_text(self, text: str) -> Tuple[bool, str]:
         if self._looks_like_injection(text):
@@ -52,13 +51,6 @@ class GuardrailsHelper:
             return False, reason
         redacted = self._redact_pii_and_secrets(text)
         return True, redacted
-
-    def sanitize_context(self, text: str) -> Tuple[bool, str]:
-        if self._looks_like_injection(text):
-            return False, ""
-        cleaned = self._strip_active_content(text)
-        cleaned = self._redact_pii_and_secrets(cleaned)
-        return True, cleaned
 
     def validate_output(self, text: str) -> AssistantOutput:
         candidate = text.strip()

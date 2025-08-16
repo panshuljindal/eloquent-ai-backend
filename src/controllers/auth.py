@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import bcrypt
-from sqlmodel import Session, select
+from sqlmodel import select
 
 from src.helpers.database import get_db_session
 from src.sql_models.user import User

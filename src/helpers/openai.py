@@ -22,7 +22,6 @@ class OpenAIHelper:
         )
         return response.output_text
 
-
 @lru_cache
 def get_openai_helper() -> OpenAIHelper:
     return OpenAIHelper()

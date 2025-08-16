@@ -1,7 +1,7 @@
 [project]
-name = "backend"
+name = "eloquent-ai-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is the backend repo for Eloquent AI Operator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

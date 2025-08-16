@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from datetime import datetime, UTC
-
 from sqlmodel import Session, select
 
 from src.sql_models.conversation import Conversation
@@ -23,8 +21,6 @@ def get_conversation_messages(conversation_id: int, session: Session) -> list[Me
 
 def create_conversation(
     user_id: int | None,
-    short_name: str | None,
-    description: str | None,
     session: Session,
 ) -> Conversation:
     """Create a new conversation"""

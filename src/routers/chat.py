@@ -35,12 +35,11 @@ def chat(
     session: Session = Depends(get_db_session),
 ):
     conversation = get_conversation_by_id(request.conversation_id, session)
-    messages = []
     if conversation is None:
-        conversation = create_conversation(request.user_id, None, None, session)
-        messages = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, None, session)]
+        conversation = create_conversation(request.user_id, session)
+        messages: list[Message] = [create_message(conversation.id, Role.SYSTEM, SYSTEM_PROMPT, None, session)]
     else:
-        messages = get_conversation_messages(conversation.id, session)
+        messages: list[Message] = get_conversation_messages(conversation.id, session)
         
     if conversation.is_deleted:
         return api_response({"message": "Conversation is deleted"}, 400)
