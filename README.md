@@ -19,10 +19,8 @@ FastAPI backend for EloquentAI. It provides:
 
 ```bash
 # from backend/
-python3.11 -m venv .venv
+uv sync
 source .venv/bin/activate
-python -m pip install -U pip
-pip install -e .
 
 # Create your .env (see Configuration below)
 cp .env.example .env  # if you create the example first
@@ -30,9 +28,6 @@ cp .env.example .env  # if you create the example first
 # Run dev server (auto-reload)
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
-
-- Open API docs: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
 
 ## Configuration
 
