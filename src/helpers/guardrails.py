@@ -34,7 +34,7 @@ class GuardrailsHelper:
     ]
 
     def __init__(self) -> None:
-        self._guard = Guard if isinstance(Guard, type) else None
+        self._guard = Guard()
 
     def validate_text(self, text: str) -> Tuple[bool, str]:
         if self._looks_like_injection(text):
