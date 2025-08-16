@@ -15,7 +15,7 @@ from src.controllers.conversation import (
     get_conversations_by_user_id,
     update_conversation,
 )
-from src.helpers.database import get_db_session
+from src.helpers.database import get_db_session_dep
 from src.helpers.filter_message import filter_messages
 from src.helpers.openai import OpenAIHelper, get_openai_helper
 from src.helpers.pinecone import PineconeHelper, get_pinecone_helper
@@ -32,7 +32,7 @@ def chat(
     openai_helper: OpenAIHelper = Depends(get_openai_helper),
     pinecone_helper: PineconeHelper = Depends(get_pinecone_helper),
     guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
-    session: Session = Depends(get_db_session),
+    session: Session = Depends(get_db_session_dep),
 ):
     conversation = get_conversation_by_id(request.conversation_id, session)
     if conversation is None:
@@ -65,7 +65,7 @@ def chat(
 @router.post("/delete/{conversation_id}")
 def delete_conversation(
     conversation_id: int,
-    session: Session = Depends(get_db_session),
+    session: Session = Depends(get_db_session_dep),
 ):
     """Delete a conversation"""
     conversation = get_conversation_by_id(conversation_id, session)
@@ -81,7 +81,7 @@ def delete_conversation(
 @router.get("/messages/{conversation_id}")
 def get_conversation_messages_by_id(
     conversation_id: int,
-    session: Session = Depends(get_db_session),
+    session: Session = Depends(get_db_session_dep),
 ):
     """Get the chat history for a session"""
     conversation = get_conversation_by_id(conversation_id, session)
@@ -96,7 +96,7 @@ def get_conversation_messages_by_id(
 @router.get("/conversations")
 def get_user_conversations(
     user_id: int | None = None,
-    session: Session = Depends(get_db_session),
+    session: Session = Depends(get_db_session_dep),
 ):
     """Get conversations for a user by query param"""
     if user_id is None:
@@ -113,7 +113,7 @@ def summarize_conversation(
     conversation_id: int,
     openai_helper: OpenAIHelper = Depends(get_openai_helper),
     guardrails: GuardrailsHelper = Depends(get_guardrails_helper),
-    session: Session = Depends(get_db_session),
+    session: Session = Depends(get_db_session_dep),
 ):
     conversation = get_conversation_by_id(conversation_id, session)
     if conversation is None:

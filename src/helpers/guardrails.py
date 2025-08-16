@@ -4,8 +4,7 @@ import html
 import re
 from typing import Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from guardrails import Guard
+from guardrails import Guard
 from pydantic import BaseModel
 
 
@@ -35,7 +34,7 @@ class GuardrailsHelper:
     ]
 
     def __init__(self) -> None:
-        self._guard = Guard
+        self._guard = Guard if isinstance(Guard, type) else None
 
     def validate_text(self, text: str) -> Tuple[bool, str]:
         if self._looks_like_injection(text):
